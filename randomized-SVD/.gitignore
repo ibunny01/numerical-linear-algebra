@@ -1,0 +1,7 @@
+videos/
+*.avi
+.ipynb_checkpoints/
+*.npy
+*.mp4
+*.html
+
