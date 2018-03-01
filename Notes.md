@@ -1,19 +1,17 @@
 # Computational Linear Algebra
 
-The following listing links to the notebooks in this repository, rendered through the [nbviewer](http://nbviewer.jupyter.org) service.  Topics Covered:
-
-## [1. Why are we here?](http://nbviewer.jupyter.org/github/fastai/numerical-linear-algebra/blob/master/nbs/1.%20Why%20are%20we%20here.ipynb) ([Video 1](https://www.youtube.com/watch?v=8iGzBMboA0I&index=1&list=PLtmWHNX-gukIc92m1K0P6bIOnZb-mg0hY))
+## 1. Why are we here?
 
 We start with a high level overview of some foundational concepts in numerical linear algebra.
 
-- [Matrix and Tensor Products](http://nbviewer.jupyter.org/github/fastai/numerical-linear-algebra/blob/master/nbs/1.%20Why%20are%20we%20here.ipynb#Matrix-and-Tensor-Products)
-- [Matrix Decompositions](http://nbviewer.jupyter.org/github/fastai/numerical-linear-algebra/blob/master/nbs/1.%20Why%20are%20we%20here.ipynb#Matrix-Decompositions)
-- [Accuracy](http://nbviewer.jupyter.org/github/fastai/numerical-linear-algebra/blob/master/nbs/1.%20Why%20are%20we%20here.ipynb#Accuracy)
-- [Memory use](http://nbviewer.jupyter.org/github/fastai/numerical-linear-algebra/blob/master/nbs/1.%20Why%20are%20we%20here.ipynb#Memory-Use)
-- [Speed](http://nbviewer.jupyter.org/github/fastai/numerical-linear-algebra/blob/master/nbs/1.%20Why%20are%20we%20here.ipynb#Speed)
-- [Parallelization & Vectorization](http://nbviewer.jupyter.org/github/fastai/numerical-linear-algebra/blob/master/nbs/1.%20Why%20are%20we%20here.ipynb#Scalability-/-parallelization)
+- [Matrix and Tensor Products]
+- [Matrix Decompositions]
+- [Accuracy]
+- [Memory use]
+- [Speed]
+- [Parallelization & Vectorization]
 
-## [2. Topic Modeling with NMF and SVD](http://nbviewer.jupyter.org/github/fastai/numerical-linear-algebra/blob/master/nbs/2.%20Topic%20Modeling%20with%20NMF%20and%20SVD.ipynb) ([Video 2](https://www.youtube.com/watch?v=kgd40iDT8yY&list=PLtmWHNX-gukIc92m1K0P6bIOnZb-mg0hY&index=2) and [Video 3](https://www.youtube.com/watch?v=C8KEtrWjjyo&index=3&list=PLtmWHNX-gukIc92m1K0P6bIOnZb-mg0hY))
+## 2. Topic Modeling with NMF and SVD
 
 We will use the newsgroups dataset to try to identify the topics of different posts.  We use a term-document matrix that represents the frequency of the vocabulary in the documents.  We factor it using NMF, and then with SVD.
 
@@ -59,11 +57,32 @@ np.allclose(Vh @ Vh.T, np.eye(Vh.shape[0]))
 
 #### check一下对角矩阵$\Sigma$
 
-<img src="./nbs/images/check_diag.png" width="90%">
+```python
+plt.plot(s)
+```
 
-eigenvalue的值下降得很快，说明前几个eigenvalue占据大半壁江山
+<img src="./nbs/images/check_diag.png" width="70%">
 
-<img src="./nbs/images/showtopics.png" width="90%">
+eigenvalue的值下降得很快，说明前几个eigenvalue占据大半壁江山。
+
+```python
+show_topics(Vh[:10])
+```
+
+```shell
+['ditto critus propagandist surname galacticentric kindergarten surreal imaginative',
+ 'jpeg gif file color quality image jfif format',
+ 'graphics edu pub mail 128 3d ray ftp',
+ 'jesus god matthew people atheists atheism does graphics',
+ 'image data processing analysis software available tools display',
+ 'god atheists atheism religious believe religion argument true',
+ 'space nasa lunar mars probe moon missions probes',
+ 'image probe surface lunar mars probes moon orbit',
+ 'argument fallacy conclusion example true ad argumentum premises',
+ 'space larson image theory universe physical nasa material']
+```
+
+
 
 ### 2.3 NMF
 
@@ -412,15 +431,17 @@ We haven't found a better general SVD method, we are just using the method we ha
 
 #### Implement Randomized SVD
 
+##### $A \approx QQ^TA$
+
 1. Compute an approximation to the range of $A$. Note that **the range of $A$ is $Range(A)=\{y:\mathrm Ax=y\}$**, or $A$ 的columns的 **span**（Linear Combination）。
 
    直观点说就是，把 $A$ 视为一个变换矩阵，将vector $\mathrm x$ 变换为 $\mathrm y$，而 $\mathrm y$ 组成的范围就是 $A$ 的 **range**。所以在后面的代码中用了一个for循环不停 $A @ Q$，就是希望最后求出的 $Q$ 能够和 $A$ 有similar column space but fewer columns。
 
    That is, we want $Q$ with $r$ orthonormal columns such that $$A \approx QQ^TA$$ 
 
-   > 【注意】如果 $Q$ 是orthonormal的，则有 $QQ^T=I$。但是这里 $Q$ 只有column是orthonormal的，所以是approximate。
+   > 【注意】如果 $Q$ 是orthogonal matrix（行列均为orthonormal），则有 $QQ^T=I$。但是这里 $Q$ 只有column是orthonormal的，所以是approximate $I$。
 
-2. Construct $B = Q^T A$, which is small ($r\times n$)。$A: m\times n$, $Q: m\times r$
+2. Construct $B = Q^T A$, which is small ($r\times n$)。$A: m\times n$, $Q: m\times r$，所以 $B$ 是 $r\times n$ << $m\times n$
 
 3. Compute the SVD of $B$ by standard methods (fast since $B$ is smaller than $A$), $B = S\,\Sigma V^T$
 
@@ -429,9 +450,7 @@ We haven't found a better general SVD method, we are just using the method we ha
 >【注意】 $U$ 的column必须是orthonormal的，才符合SVD的要求， $U=QS$ 可以说明 $U$ 是orthonormal的吗？
 >可以滴，因为 $S$ 和 $Q$ 都是column orthonormal的。
 
-**How to find $Q$ ?**
-
-The method `randomized_range_finder` finds an orthonomal matrix whose range approximates the range of $A$ (step 1 in our algorithm above). To do so, we use the LU and QR factorizations, both of which we will be covering in depth later.
+##### How to find $Q$ 
 
 **使用随机采样方式构建矩阵 $Q$：**
 
@@ -439,13 +458,17 @@ The method `randomized_range_finder` finds an orthonomal matrix whose range appr
 * 2.进行矩阵乘积运算 $Y=AΩ$
 * 3.利用QR分解获得 $Y$ 的正交基 $Q=qr(Y)$
 
-> To estimate the range of $A$, we can just take a bunch of random vectors $w_i$, evaluate the subspace formed by $Aw_i$.  We can form a matrix $W$ with the $w_i$ as it's columns.  Now, we take the QR decomposition of $AW = QR$, then the columns of $Q$ form an **orthonormal** basis for $AW$ (like $e_i,e_j,e_k$), which is the range of $A$. And R is a **upper trianglur** matrix.
+> To estimate the range of $A$, we can just take a bunch of random vectors $w_i$, evaluate the subspace formed by $Aw_i$.  We can form a matrix $W$ with the $w_i$ as it's columns.  Now, we take the QR decomposition of $AW = QR$, then the columns of $Q$ form an **orthonormal** basis for $AW$ (like $e_i,e_j,e_k$), and $AW$ gives us the range of $A$ . （因为 $A$ 乘上了一堆随机的vector $w_i$，相当于把这些 $w_i$ 变换为其他vector，这些vector合并到一起基本上就可以看做是 $A$ 的range了）
+>
+> And $R$ is a **upper trianglur** matrix.
 >
 > Since the matrix $AW$ of the product has far more rows than columns and therefore, approximately, orthonormal columns. This is simple probability - with lots of rows, and few columns, it's unlikely that the columns are linearly dependent.
 
+The method `randomized_range_finder` finds an orthonomal matrix whose range approximates the range of $A$ (step 1 in our algorithm above). To do so, we use the LU and QR factorizations: 
+
 ```python
 # computes on orthonormal matrix whose range approximates the range of A
-# power_iteration_normalizer can be safe_sparse_dot (fast but unstable),
+# power_iteration_normalizer can be safe_sparse_dot (fast but unstable)
 def randomized_range_finder(A, size, n_iter=5):
     Q = np.random.normal(size=(A.shape[1], size))
     
@@ -459,6 +482,14 @@ def randomized_range_finder(A, size, n_iter=5):
     return Q
 ```
 
+##### How to choose $R$
+
+Suppose our matrix has 100 columns, and we want 5 columns in $U$ and V. To be safe, we should project our matrix onto an orthogonal basis with a few more rows and columns than 5 (let's use 15).  At the end, we will just grab the first 5 columns of $U$ and $V$ .
+
+So even although our projection was only approximate, by making it a bit bigger than we need, we can make up for the loss of accuracy (since we're only taking a subset later). 
+
+##### Implement
+
 And here's our randomized SVD method:
 
 * 4.构建低维矩阵 $B=Q^TA$, 维度为(k+p)
@@ -468,27 +499,264 @@ And here's our randomized SVD method:
 * 6.用 $Q$ 更新左奇异向量，$U_B= Q\hat{U}$，也就是前面提的 $U=QS$
 * 7.得到最终结果 $U_A=U_B(:,1:k)$, $Σ_A=Σ_B(1:k,1:k)$, $V_A=V_B(:,1:k)$
 
->Q：为什么要用 `n_oversamples`？
+```python
+def randomized_svd(M, n_components, n_oversamples=10, n_iter=4):
+    # `n_components`代表我们想要的前n个singular value，也就是topic model中的topics
+    n_random = n_components + n_oversamples
+    
+    Q = randomized_range_finder(M, n_random, n_iter)
+    
+    # project M to the (k+p) dims space using the basic vectors
+    B = Q.T @ M
+    
+    # compute the SVD on the thin matrix: (k+p) wide
+    Uhat, s, V = linalg.svd(B, full_matrices=False)
+    del B
+    U = Q @ Uhat
+    
+    return U[:, :n_components], s[:n_components], v[:n_components, :]
+```
+
+> Q：为什么要用 `n_oversamples`？
 >
->如果我们只想要5个topic，但是在计算时要取得稍稍多一点，比如15个topics。`n_oversamples` is kind of like a safety buffer，因为我们对这堆documents到底该归为几个topic是一无所知的。你如果只取5个topic的话，可能有一些不属于这些topic的document会被squeeze into those 5 topic。但是你取15个topic的话，那这前5个topic里面的document就会clean许多。
+> 如果我们只想要5个topic，但是在计算时要取得稍稍多一点，比如15个topics。`n_oversamples` is kind of like a safety buffer，因为我们对这堆documents到底该归为几个topic是一无所知的。你如果只取5个topic的话，可能有一些不属于这些topic的document会被squeeze into those 5 topic。但是你取15个topic的话，那这前5个topic里面的document就会clean许多。
+
+```python
+# 137ms
+%time u, s, v = randomized_svd(vectors, 5)
+
+#((2034, 5), (5,), (5, 26576))
+u.shape, s.shape, v.shape
+```
+
+**Plot Error**
+
+Calculate the error of the decomposition as we vary the # of topics, 然后plot一下result：
+
+```python
+step = 20
+n = 20
+error = np.zeros(n)
+
+for i in range(n):
+    U, s, V = randomized_svd(vectors, i*step)
+    reconstructed = U @ np.diag(s) @ V
+    error[i] = np.linalg.norm(vectors - reconstructed)
+    
+plt.plot(range(0,n*step,step), error)
+```
+
+<img src="./nbs/images/randomized_svd_result.png" width="70%">
+
+根据上图可以看出，前几个singular value capture more than additional singular value.
+
+##### Randomized SVD in sklearn
+
+```python
+%time u, s, v = decomposition.randomized_svd(vectors, 5)
+
+%time u, s, v = decomposition.randomized_svd(vectors.todense(), 5)
+```
 
 
 
-
-
-
-
-- [Non-negative Matrix Factorization (NMF)](http://nbviewer.jupyter.org/github/fastai/numerical-linear-algebra/blob/master/nbs/2.%20Topic%20Modeling%20with%20NMF%20and%20SVD.ipynb#Non-negative-Matrix-Factorization-(NMF))
-- [Stochastic Gradient Descent (SGD)](http://nbviewer.jupyter.org/github/fastai/numerical-linear-algebra/blob/master/nbs/2.%20Topic%20Modeling%20with%20NMF%20and%20SVD.ipynb#Gradient-Descent)
-- [Intro to PyTorch](http://nbviewer.jupyter.org/github/fastai/numerical-linear-algebra/blob/master/nbs/2.%20Topic%20Modeling%20with%20NMF%20and%20SVD.ipynb#PyTorch)
-- [Truncated SVD](http://nbviewer.jupyter.org/github/fastai/numerical-linear-algebra/blob/master/nbs/2.%20Topic%20Modeling%20with%20NMF%20and%20SVD.ipynb#Truncated-SVD)
-
-### [3. Background Removal with Robust PCA](https://nbviewer.jupyter.org/github/fastai/numerical-linear-algebra/blob/master/nbs/3.%20Background%20Removal%20with%20Robust%20PCA.ipynb) ([Video 3](https://www.youtube.com/watch?v=C8KEtrWjjyo&index=3&list=PLtmWHNX-gukIc92m1K0P6bIOnZb-mg0hY), [Video 4](https://www.youtube.com/watch?v=Ys8R2nUTOAk&index=4&list=PLtmWHNX-gukIc92m1K0P6bIOnZb-mg0hY), and [Video 5](https://www.youtube.com/watch?v=O2x5KPJr5ag&list=PLtmWHNX-gukIc92m1K0P6bIOnZb-mg0hY&index=5))
+## 3. Background Removal with Robust PCA
 
 Another application of SVD is to identify the people and remove the background of a surveillance video.  We will cover robust PCA, which uses randomized SVD.  And Randomized SVD uses the LU factorization.
 
-- [Load and View Video Data](https://nbviewer.jupyter.org/github/fastai/numerical-linear-algebra/blob/master/nbs/3.%20Background%20Removal%20with%20Robust%20PCA.ipynb#Load-and-view-the-data)
-- [SVD](https://nbviewer.jupyter.org/github/fastai/numerical-linear-algebra/blob/master/nbs/3.%20Background%20Removal%20with%20Robust%20PCA.ipynb#SVD)
+### 3.1 Load and View Video Data
+
+...
+
+### 3.2 SVD
+
+…
+
+### 3.3 PCA
+
+When dealing with high-dimensional data sets, we often leverage on the fact that the data has **low intrinsic dimensionality** in order to alleviate the curse of dimensionality and scale (perhaps it lies in a low-dimensional subspace or lies on a low-dimensional manifold). [Principal component analysis](http://setosa.io/ev/principal-component-analysis/) is handy for eliminating dimensions.  Classical PCA seeks the best rank-$k$ estimate $L$ of $M$ (minimizing $\| M - L \|$ where $L$ has rank-$k$).  Truncated SVD makes this calculation!
+
+**Traditional PCA can handle small noise, but is brittle with respect to grossly corrupted observations**-- even one grossly corrupt observation can significantly mess up answer.
+
+**Robust PCA** factors a matrix into the sum of two matrices, $M = L + S​$, where $M​$ is the original matrix, $L​$ is **low-rank**, and $S​$ is **sparse**.  This is what we'll be using for the background removal problem! **Low-rank** means that the matrix has a lot of redundant information-- in this case, it's the background, which is the same in every scene (talk about redundant info!).  **Sparse** means that the matrix has mostly zero entries-- in this case, see how the picture of the foreground (the people) is mostly empty.  (**In the case of corrupted data, $S​$ is capturing the corrupted entries**. Assume that corrupt data is sparse).
+
+### 3.4 Robust PCA的应用
+
+#### Face Recognition
+
+下图可以很明显的看到 Low-rank 矩阵就是原图，sparse 矩阵就是人工加上去的噪声！
+
+<img src="./nbs/images/faces_rpca.png" alt="Robust PCA" style="width: 80%"/>
+  ([Source: Jean Kossaifi](https://jeankossaifi.github.io/tensorly/rpca.html))
+
+<img src="./nbs/images/faces_rpca_gross.png" alt="Robust PCA" style="width: 80%"/>
+  ([Source: Jean Kossaifi](https://jeankossaifi.github.io/tensorly/rpca.html))
+
+### 3.5 Robust PCA OPtimization
+
+#### Source
+
+The general **primary component pursuit algorithm** from this [Robust PCA paper](https://arxiv.org/pdf/0912.3599.pdf) (Candes, Li, Ma, Wright), in the specific form of **Matrix Completion via the Inexact ALM Method** found in [section 3.1 of this paper](https://arxiv.org/pdf/1009.5055.pdf) (Lin, Chen, Ma).  
+
+#### Optimize Algorithms
+
+##### I. principal component pursuit
+
+Robust PCA can be written:
+$$
+minimize \lVert L \rVert_* + \lambda\lVert S \rVert_1 \\ subject\;to\; L + S = M
+$$
+where:
+
+- $\lVert \cdot \rVert_1$ is the **L1 norm**.  Minimizing the [L1 norm](http://blog.csdn.net/ibunny/article/details/78979362) results in sparse values. For a matrix, the L1 norm is equal to the [maximum absolute column norm](http://blog.csdn.net/ibunny/article/details/78979362). 
+
+  * Q：这里为啥用 $L_1$ norm呢？
+
+    因为 $L_1$ norm会lead更好的稀疏性，而我们需要 $S$ to be a sparse matrix.
+
+- $ \lVert \cdot \rVert_* $ is the **nuclear norm**, which is the L1 norm of the singular values.  Trying to minimize this results in sparse singular values --> low rank.
+
+
+<img src="./nbs/images/pcp_algorithm.png" alt="PCP algorithm" style="width: 100%"/>
+
+* **shrinkage operator $S$ ** 取 $S$ 中的singular value，然后减去 $\tau$ ，如果value比 $\tau$ 小，就round them to 0. 如果 value 大于 $\tau$ 就将两者的差反号，使得singular value更接近0。总的来说这个shrinkage操作就是使得singular value smaller，从而使它们更加sparse。不要忘了我们的目标是：找到一个sparse的 $S$。
+
+* 第2步 **singular value thresholder $D$ **就是先对矩阵做SVD分解，然后通过 $S$ 的 shrinkage 操作使得singular value变小之后，再reconstruct $D_\tau (X)=US_\tau(\sum)V^*$ 得到Low_rank矩阵 $L$ 的approximation。
+
+  > 这个操作有点像 truncated SVD，也就是说把singular value比较小的那些vector cut off。
+
+* 第3、4步的意思大概是，因为我们的目标是要把原矩阵分解成一个 Low_rank 矩阵 $L$ 加上一个 Sparse 矩阵 $S$ ，所以这里我们要不断让 Low_rank矩阵等于原矩阵 $M$ 减去 Sparse 矩阵 $S$，同时让 $S$ 尽可能等于 $M-L$。是一个比较典型的交替更新的方法。
+
+* 而 $\mu^{-1}Y_k$ 是为了 keep track of what you still have to approximate（residual error）. 
+
+##### II. ALM
+
+<img src="./nbs/images/candes.png" alt="PCP algorithm" style="width: 100%"/>
+
+Section 3.1 of [Chen, Lin, Ma]() contains a faster vartiation of this:
+
+<img src="./nbs/images/rpca_inexact.png" alt="Inexact RPCA" style="width: 100%"/>
+
+And Section 4 has some very helpful implementation details on how many singular values to calculate (as well as how to choose the parameter values): <img src="./nbs/images/svp_value.png" alt="SVP values" style="width:100%"/>
+
+### 3.6 Implement principal component pursuit
+
+借用 [Facebook's Fast Randomized PCA](https://github.com/facebook/fbpca) library实现一发principal component pursuit。
+
+```python
+from scipy import sparse
+from sklearn.utils.extmath import randomized_svd
+import fbpca
+
+# TOL是收敛的boundary
+TOL=1e-9
+MAX_ITERS=3
+
+def converged(Z, d_norm):
+    err = np.linalg.norm(Z, 'fro') / d_norm
+    print('error: ', err)
+    return err < TOL
+
+```
+
+**shrinkage operator：**把小于 $\tau$ 的singular value都置为0，从另一角度来看就是类似在truncating matrix，ignore那些很小的singular value。
+
+```python
+def shrink(M, tau):
+    S = np.abs(M) - tau
+    return np.sign(M) * np.where(S>0, S, 0)
+```
+
+```python
+# 写作pca， 读作svd，实际上是一个fast svd implementation
+def _svd(M, rank): return fbpca.pca(M, k=min(rank, np.min(M.shape)), raw=True)
+
+def norm_op(M): return _svd(M, 1)[1][0]
+
+# D操作
+# 这里的rank是因为fbpca.pca做的是randomized svd，所以需要指定你要保留的rank数
+def svd_reconstruct(M, rank, min_sv):
+    u, s, v = _svd(M, rank)
+    # 这里面min_sv就是下面提到的sv
+    s -= min_sv
+    nnz = (s > 0).sum()
+    return u[:,:nnz] @ np.diag(s[:nnz]) @ v[:nnz], nnz
+```
+
+principal component pursuit关键代码实现：
+
+<img src="./nbs/images/pcp_algorithm.png" alt="PCP algorithm" style="width: 100%"/>
+
+```python
+# principal component pursuit是Robust PCA的其中一种algorithm
+def pcp(X, maxiter=10, k=10): # refactored
+    m, n = X.shape
+    trans = m<n
+    if trans: X = X.T; m, n = X.shape
+        
+    lamda = 1/np.sqrt(m)
+    op_norm = norm_op(X)
+    Y = np.copy(X) / max(op_norm, np.linalg.norm( X, np.inf) / lamda)
+    mu = k*1.25/op_norm; mu_bar = mu * 1e7; rho = k * 1.5
+    
+    d_norm = np.linalg.norm(X, 'fro')
+    L = np.zeros_like(X); sv = 1
+    
+    examples = []
+    
+    for i in range(maxiter):
+        print("rank sv:", sv)
+        X2 = X + Y/mu
+        
+        # update estimate of Sparse Matrix by "shrinking/truncating": original - low-rank
+        # 对应step 4
+        S = shrink(X2 - L, lamda/mu)
+        
+        # update estimate of Low-rank Matrix by doing truncated SVD of rank sv & reconstructing.
+        # count of singular values > 1/mu is returned as svp
+        # 对应step 3
+        L, svp = svd_reconstruct(X2 - S, sv, 1/mu)
+        
+        '''
+        这个sv是个划重点的东西，代表了你在truncating svd希望保留的rank数目，这个值需要不停地更新
+        原始矩阵为400*11300，很明显我们不可能做full svd，肯定贼慢
+        所以我们先甩掉singular value小于1/μ对应的那些vector，
+            * 如果我们得到的rank：svp < sv，说明我们想要的value（不小于1/μ的）都已经保留了，
+              即我们甩掉的value都是该甩的，则下一轮只将 sv + 1（因为第sv之后的singular value也没包含太多信息了）
+            * 否则即 svp = sv 说明第sv个singular value之后的value可能还有大于1/μ的，
+              我们甩多了，所以下一轮就要多保留一些sv
+        看Results中的输出来check一下
+        '''
+        
+        # If svp < sv, you are already calculating enough singular values.
+        # If not, add 20% (in this case 240) to sv
+        sv = svp + (1 if svp < sv else round(0.05*n))
+        
+        # residual
+        Z = X - L - S
+        Y += mu*Z; mu *= rho
+        
+        # keep track Time=140 时的visual
+        examples.extend([S[140,:], L[140,:]])
+        
+        if m > mu_bar: m = mu_bar
+        if converged(Z, d_norm): break
+    
+    if trans: L=L.T; S=S.T
+    return L, S, examples
+```
+
+
+
+
+
+
+
+
+
+
+
+
 - [Principal Component Analysis (PCA)](https://github.com/fastai/numerical-linear-algebra/blob/master/nbs/3.%20Background%20Removal%20with%20Robust%20PCA.ipynb)
 - [L1 Norm Induces Sparsity](https://nbviewer.jupyter.org/github/fastai/numerical-linear-algebra/blob/master/nbs/3.%20Background%20Removal%20with%20Robust%20PCA.ipynb#L1-norm-induces-sparsity)
 - [Robust PCA](https://nbviewer.jupyter.org/github/fastai/numerical-linear-algebra/blob/master/nbs/3.%20Background%20Removal%20with%20Robust%20PCA.ipynb#Robust-PCA-(via-Primary-Component-Pursuit))
@@ -543,7 +811,7 @@ We have applied SVD to topic modeling, background removal, and linear regression
 - [Householder](http://nbviewer.jupyter.org/github/fastai/numerical-linear-algebra/blob/master/nbs/8.%20Implementing%20QR%20Factorization.ipynb#Householder)
 - [Stability Examples](http://nbviewer.jupyter.org/github/fastai/numerical-linear-algebra/blob/master/nbs/8.%20Implementing%20QR%20Factorization.ipynb#Ex-9.2:-Classical-vs-Modified-Gram-Schmidt)
 
-<hr>
+
 
 ## Why is this course taught in such a weird order?
 
